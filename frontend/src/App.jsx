@@ -290,509 +290,637 @@ export default function App() {
   // --------- RENDER ---------
 
   return (
+  <div
+    style={{
+      maxWidth: 1200,
+      margin: "24px auto",
+      fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
+      color: "white",
+    }}
+  >
+    <h1 style={{ marginBottom: 8 }}>System analizy danych</h1>
+
+    {/* NAV */}
     <div
       style={{
-        maxWidth: 1200,
-        margin: "24px auto",
-        fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, sans-serif",
-        color: "white",
+        display: "flex",
+        gap: 8,
+        marginBottom: 16,
+        flexWrap: "wrap",
       }}
     >
-      <h1 style={{ marginBottom: 8 }}>
-        System analizy danych rynkowych — prototyp UI
-      </h1>
-
-      {/* NAV */}
-      <div
+      <button
+        onClick={() => setView("single")}
         style={{
-          display: "flex",
-          gap: 8,
-          marginBottom: 16,
-          flexWrap: "wrap",
+          padding: "8px 16px",
+          borderRadius: 6,
+          border: "none",
+          cursor: "pointer",
+          background: view === "single" ? "#1f2937" : "#111",
+          color: "white",
         }}
       >
-        <button
-          onClick={() => setView("single")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 6,
-            border: "none",
-            cursor: "pointer",
-            background: view === "single" ? "#1f2937" : "#111",
-            color: "white",
-          }}
-        >
-          UC1–UC3: pojedynczy instrument
-        </button>
-        <button
-          onClick={() => setView("compare")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 6,
-            border: "none",
-            cursor: "pointer",
-            background: view === "compare" ? "#1f2937" : "#111",
-            color: "white",
-          }}
-        >
-          Porównanie instrumentów
-        </button>
-        <button
-          onClick={() => setView("portfolio")}
-          style={{
-            padding: "8px 16px",
-            borderRadius: 6,
-            border: "none",
-            cursor: "pointer",
-            background: view === "portfolio" ? "#1f2937" : "#111",
-            color: "white",
-          }}
-        >
-          Portfel (demo)
-        </button>
-      </div>
+        pojedynczy instrument
+      </button>
+      <button
+        onClick={() => setView("compare")}
+        style={{
+          padding: "8px 16px",
+          borderRadius: 6,
+          border: "none",
+          cursor: "pointer",
+          background: view === "compare" ? "#1f2937" : "#111",
+          color: "white",
+        }}
+      >
+        Porównanie instrumentów
+      </button>
+      <button
+        onClick={() => setView("portfolio")}
+        style={{
+          padding: "8px 16px",
+          borderRadius: 6,
+          border: "none",
+          cursor: "pointer",
+          background: view === "portfolio" ? "#1f2937" : "#111",
+          color: "white",
+        }}
+      >
+        Portfel (demo)
+      </button>
+    </div>
 
-      {view === "single" && (
-        <section>
-          <h2 style={{ marginBottom: 8 }}>UC1–UC3 — pojedynczy instrument</h2>
+    {view === "single" && (
+      <section>
+        <h2 style={{ marginBottom: 8 }}>pojedynczy instrument</h2>
 
-          <div
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginBottom: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <input
+            value={symbol}
+            onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+            placeholder="Symbol (np. AAPL)"
             style={{
-              display: "flex",
-              gap: 8,
-              marginBottom: 12,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <input
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-              placeholder="Symbol (np. AAPL)"
-              style={{
-                padding: 8,
-                borderRadius: 4,
-                border: "1px solid #444",
-                minWidth: 90,
-              }}
-            />
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
-            />
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
-            />
-
-            <button
-              onClick={loadHistory}
-              disabled={singleLoading}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 4,
-                border: "none",
-                background: "#111",
-                color: "white",
-                cursor: "pointer",
-              }}
-            >
-              {singleLoading ? "Pobieram..." : "Pobierz historię"}
-            </button>
-
-            <button
-              onClick={loadCurrent}
-              disabled={singleLoading}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 4,
-                border: "none",
-                background: "#111",
-                color: "white",
-                cursor: "pointer",
-              }}
-            >
-              Bieżące dane
-            </button>
-
-            <button
-              onClick={downloadCsv}
-              disabled={singleLoading || !points.length}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 4,
-                border: "none",
-                background: "#111",
-                color: "white",
-                cursor: "pointer",
-              }}
-            >
-              Eksport CSV
-            </button>
-          </div>
-
-          {singleErr && (
-            <div style={{ color: "crimson", marginBottom: 8 }}>{singleErr}</div>
-          )}
-
-          {lastQuote && (
-            <div style={{ marginBottom: 12, fontSize: 14 }}>
-              <strong>Bieżące dane ({symbol}):</strong>{" "}
-              {lastQuote.date} | O: {lastQuote.open} H: {lastQuote.high} L:{" "}
-              {lastQuote.low} C: {lastQuote.close} V: {lastQuote.volume}
-            </div>
-          )}
-
-          <div
-            style={{
-              height: 420,
-              border: "1px solid #444",
-              borderRadius: 8,
               padding: 8,
-              background: "#111",
-            }}
-          >
-            <Line data={singleChartData} options={timeChartOptions} />
-          </div>
-        </section>
-      )}
-
-      {view === "compare" && (
-        <section>
-          <h2 style={{ marginBottom: 8 }}>Porównanie instrumentów</h2>
-
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              marginBottom: 12,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <input
-              value={cmpSymbols}
-              onChange={(e) => setCmpSymbols(e.target.value)}
-              placeholder="Symbole, np. AAPL,MSFT,TSLA"
-              style={{
-                padding: 8,
-                borderRadius: 4,
-                border: "1px solid #444",
-                minWidth: 260,
-              }}
-            />
-            <input
-              type="date"
-              value={cmpStart}
-              onChange={(e) => setCmpStart(e.target.value)}
-              style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
-            />
-            <input
-              type="date"
-              value={cmpEnd}
-              onChange={(e) => setCmpEnd(e.target.value)}
-              style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
-            />
-
-            <button
-              onClick={loadCompare}
-              disabled={cmpLoading}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 4,
-                border: "none",
-                background: "#111",
-                color: "white",
-                cursor: "pointer",
-              }}
-            >
-              {cmpLoading ? "Porównuję..." : "Porównaj"}
-            </button>
-          </div>
-
-          {cmpErr && (
-            <div style={{ color: "crimson", marginBottom: 8 }}>{cmpErr}</div>
-          )}
-
-          <div
-            style={{
-              height: 420,
+              borderRadius: 4,
               border: "1px solid #444",
-              borderRadius: 8,
-              padding: 8,
-              background: "#111",
-              marginBottom: 16,
+              minWidth: 90,
             }}
-          >
-            {cmpData ? (
-              <Line data={compareChartData} options={timeChartOptions} />
-            ) : (
-              <div style={{ color: "#aaa", padding: 12 }}>
-                Wpisz symbole i kliknij „Porównaj”.
-              </div>
-            )}
-          </div>
+          />
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
+          />
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
+          />
 
-          {cmpData && (
-            <div>
-              <h3>Podstawowe metryki</h3>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  marginTop: 8,
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Symbol
-                    </th>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Zwrot [%]
-                    </th>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Zmienność dzienna [%]
-                    </th>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Max drawdown [%]
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cmpData.metrics.map((m) => (
-                    <tr key={m.symbol}>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "center",
-                        }}
-                      >
-                        {m.symbol}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "right",
-                        }}
-                      >
-                        {m.return_pct.toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "right",
-                        }}
-                      >
-                        {m.volatility_pct.toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "right",
-                        }}
-                      >
-                        {m.max_drawdown_pct.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      )}
-
-      {view === "portfolio" && (
-        <section>
-          <h2 style={{ marginBottom: 8 }}>Portfel demo (backend UC rozszerzony)</h2>
-
-          <form
-            onSubmit={submitPosition}
+          <button
+            onClick={loadHistory}
+            disabled={singleLoading}
             style={{
-              display: "flex",
-              gap: 8,
-              marginBottom: 12,
-              flexWrap: "wrap",
-              alignItems: "center",
+              padding: "8px 16px",
+              borderRadius: 4,
+              border: "none",
+              background: "#111",
+              color: "white",
+              cursor: "pointer",
             }}
           >
-            <input
-              value={pfSymbol}
-              onChange={(e) => setPfSymbol(e.target.value.toUpperCase())}
-              placeholder="Symbol (np. AAPL)"
+            {singleLoading ? "Pobieram..." : "Pobierz historię"}
+          </button>
+
+          <button
+            onClick={loadCurrent}
+            disabled={singleLoading}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 4,
+              border: "none",
+              background: "#111",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Bieżące dane
+          </button>
+
+          <button
+            onClick={downloadCsv}
+            disabled={singleLoading || !points.length}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 4,
+              border: "none",
+              background: "#111",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Eksport CSV
+          </button>
+        </div>
+
+        {singleErr && (
+          <div style={{ color: "crimson", marginBottom: 8 }}>{singleErr}</div>
+        )}
+
+        {/* Ładny panel z bieżącymi danymi */}
+        {lastQuote && (
+          <div
+            style={{
+              marginBottom: 12,
+              fontSize: 14,
+              padding: "8px 12px",
+              background: "#020617",
+              borderRadius: 8,
+              border: "1px solid #1f2937",
+            }}
+          >
+            <div
               style={{
-                padding: 8,
-                borderRadius: 4,
-                border: "1px solid #444",
-                minWidth: 90,
-              }}
-            />
-            <input
-              type="number"
-              step="0.01"
-              value={pfQty}
-              onChange={(e) => setPfQty(e.target.value)}
-              placeholder="Ilość"
-              style={{
-                padding: 8,
-                borderRadius: 4,
-                border: "1px solid #444",
-                width: 90,
-              }}
-            />
-            <input
-              type="number"
-              step="0.01"
-              value={pfPrice}
-              onChange={(e) => setPfPrice(e.target.value)}
-              placeholder="Śr. cena zakupu"
-              style={{
-                padding: 8,
-                borderRadius: 4,
-                border: "1px solid #444",
-                width: 130,
-              }}
-            />
-            <button
-              type="submit"
-              disabled={pfLoading}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 4,
-                border: "none",
-                background: "#111",
-                color: "white",
-                cursor: "pointer",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "baseline",
+                gap: 8,
+                marginBottom: 6,
               }}
             >
-              {pfLoading ? "Zapisuję..." : "Dodaj / zaktualizuj pozycję"}
-            </button>
-            <button
-              type="button"
-              onClick={loadPortfolio}
-              disabled={pfLoading}
-              style={{
-                padding: "8px 16px",
-                borderRadius: 4,
-                border: "none",
-                background: "#111",
-                color: "white",
-                cursor: "pointer",
-              }}
-            >
-              Odśwież portfel
-            </button>
-          </form>
-
-          {pfErr && (
-            <div style={{ color: "crimson", marginBottom: 8 }}>{pfErr}</div>
-          )}
-
-          {portfolio ? (
-            <div>
-              <div style={{ marginBottom: 8 }}>
-                <strong>{portfolio.name}</strong> | Wartość całkowita:{" "}
-                {portfolio.total_value.toFixed(2)}{" "}
-                {portfolio.base_currency || ""}
+              <div>
+                <span
+                  style={{
+                    textTransform: "uppercase",
+                    fontSize: 11,
+                    letterSpacing: "0.08em",
+                    color: "#9ca3af",
+                    marginRight: 6,
+                  }}
+                >
+                  Bieżące dane
+                </span>
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: "#f97316",
+                  }}
+                >
+                  {symbol}
+                </span>
               </div>
-              <table
-                style={{
-                  width: "100%",
-                  borderCollapse: "collapse",
-                  marginTop: 8,
-                }}
-              >
-                <thead>
-                  <tr>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Instrument
-                    </th>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Ilość
-                    </th>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Śr. cena zakupu
-                    </th>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Bieżąca cena
-                    </th>
-                    <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
-                      Wartość pozycji
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {portfolio.positions.map((p) => (
-                    <tr key={p.instrument}>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "center",
-                        }}
-                      >
-                        {p.instrument}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "right",
-                        }}
-                      >
-                        {p.quantity.toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "right",
-                        }}
-                      >
-                        {p.avg_open_price.toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "right",
-                        }}
-                      >
-                        {p.current_price.toFixed(2)}
-                      </td>
-                      <td
-                        style={{
-                          borderBottom: "1px solid #333",
-                          padding: 6,
-                          textAlign: "right",
-                        }}
-                      >
-                        {p.position_value.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div style={{ fontSize: 12, color: "#9ca3af" }}>
+                {lastQuote.date}
+              </div>
             </div>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 16,
+              }}
+            >
+              <div style={{ minWidth: 90 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Otwarcie
+                </div>
+                <div style={{ fontWeight: 500 }}>
+                  {lastQuote.open.toFixed(2)}
+                </div>
+              </div>
+
+              <div style={{ minWidth: 90 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Maksimum
+                </div>
+                <div style={{ fontWeight: 500 }}>
+                  {lastQuote.high.toFixed(2)}
+                </div>
+              </div>
+
+              <div style={{ minWidth: 90 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Minimum
+                </div>
+                <div style={{ fontWeight: 500 }}>
+                  {lastQuote.low.toFixed(2)}
+                </div>
+              </div>
+
+              <div style={{ minWidth: 90 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Zamknięcie
+                </div>
+                <div style={{ fontWeight: 500 }}>
+                  {lastQuote.close.toFixed(2)}
+                </div>
+              </div>
+
+              <div style={{ minWidth: 120 }}>
+                <div
+                  style={{
+                    fontSize: 11,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#9ca3af",
+                  }}
+                >
+                  Wolumen
+                </div>
+                <div style={{ fontWeight: 500 }}>
+                  {lastQuote.volume.toLocaleString("pl-PL")}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div
+          style={{
+            height: 420,
+            border: "1px solid #444",
+            borderRadius: 8,
+            padding: 8,
+            background: "#111",
+          }}
+        >
+          <Line data={singleChartData} options={timeChartOptions} />
+        </div>
+      </section>
+    )}
+
+    {view === "compare" && (
+      <section>
+        <h2 style={{ marginBottom: 8 }}>Porównanie instrumentów</h2>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            marginBottom: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <input
+            value={cmpSymbols}
+            onChange={(e) => setCmpSymbols(e.target.value)}
+            placeholder="Symbole, np. AAPL,MSFT,TSLA"
+            style={{
+              padding: 8,
+              borderRadius: 4,
+              border: "1px solid #444",
+              minWidth: 260,
+            }}
+          />
+          <input
+            type="date"
+            value={cmpStart}
+            onChange={(e) => setCmpStart(e.target.value)}
+            style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
+          />
+          <input
+            type="date"
+            value={cmpEnd}
+            onChange={(e) => setCmpEnd(e.target.value)}
+            style={{ padding: 8, borderRadius: 4, border: "1px solid #444" }}
+          />
+
+          <button
+            onClick={loadCompare}
+            disabled={cmpLoading}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 4,
+              border: "none",
+              background: "#111",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            {cmpLoading ? "Porównuję..." : "Porównaj"}
+          </button>
+        </div>
+
+        {cmpErr && (
+          <div style={{ color: "crimson", marginBottom: 8 }}>{cmpErr}</div>
+        )}
+
+        <div
+          style={{
+            height: 420,
+            border: "1px solid #444",
+            borderRadius: 8,
+            padding: 8,
+            background: "#111",
+            marginBottom: 16,
+          }}
+        >
+          {cmpData ? (
+            <Line data={compareChartData} options={timeChartOptions} />
           ) : (
             <div style={{ color: "#aaa", padding: 12 }}>
-              Brak danych portfela — dodaj pozycję lub kliknij „Odśwież portfel”.
+              Wpisz symbole i kliknij „Porównaj”.
             </div>
           )}
-        </section>
-      )}
-      <div style={{ marginTop: "2rem" }}>
-        <AlertsPanel />
-      </div>
-    </div>
-  );
+        </div>
+
+        {cmpData && (
+          <div>
+            <h3>Podstawowe metryki</h3>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                marginTop: 8,
+              }}
+            >
+              <thead>
+                <tr>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Symbol
+                  </th>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Zwrot [%]
+                  </th>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Zmienność dzienna [%]
+                  </th>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Max drawdown [%]
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {cmpData.metrics.map((m) => (
+                  <tr key={m.symbol}>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "center",
+                      }}
+                    >
+                      {m.symbol}
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "right",
+                      }}
+                    >
+                      {m.return_pct.toFixed(2)}
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "right",
+                      }}
+                    >
+                      {m.volatility_pct.toFixed(2)}
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "right",
+                      }}
+                    >
+                      {m.max_drawdown_pct.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    )}
+
+    {view === "portfolio" && (
+      <section>
+        <h2 style={{ marginBottom: 8 }}>Portfel</h2>
+
+        <form
+          onSubmit={submitPosition}
+          style={{
+            display: "flex",
+            gap: 8,
+            marginBottom: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <input
+            value={pfSymbol}
+            onChange={(e) => setPfSymbol(e.target.value.toUpperCase())}
+            placeholder="Symbol (np. AAPL)"
+            style={{
+              padding: 8,
+              borderRadius: 4,
+              border: "1px solid #444",
+              minWidth: 90,
+            }}
+          />
+          <input
+            type="number"
+            step="0.01"
+            value={pfQty}
+            onChange={(e) => setPfQty(e.target.value)}
+            placeholder="Ilość"
+            style={{
+              padding: 8,
+              borderRadius: 4,
+              border: "1px solid #444",
+              width: 90,
+            }}
+          />
+          <input
+            type="number"
+            step="0.01"
+            value={pfPrice}
+            onChange={(e) => setPfPrice(e.target.value)}
+            placeholder="Śr. cena zakupu"
+            style={{
+              padding: 8,
+              borderRadius: 4,
+              border: "1px solid #444",
+              width: 130,
+            }}
+          />
+          <button
+            type="submit"
+            disabled={pfLoading}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 4,
+              border: "none",
+              background: "#111",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            {pfLoading ? "Zapisuję..." : "Dodaj / zaktualizuj pozycję"}
+          </button>
+          <button
+            type="button"
+            onClick={loadPortfolio}
+            disabled={pfLoading}
+            style={{
+              padding: "8px 16px",
+              borderRadius: 4,
+              border: "none",
+              background: "#111",
+              color: "white",
+              cursor: "pointer",
+            }}
+          >
+            Odśwież portfel
+          </button>
+        </form>
+
+        {pfErr && (
+          <div style={{ color: "crimson", marginBottom: 8 }}>{pfErr}</div>
+        )}
+
+        {portfolio ? (
+          <div>
+            <div style={{ marginBottom: 8 }}>
+              <strong>{portfolio.name}</strong> | Wartość całkowita:{" "}
+              {portfolio.total_value.toFixed(2)}{" "}
+              {portfolio.base_currency || ""}
+            </div>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                marginTop: 8,
+              }}
+            >
+              <thead>
+                <tr>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Instrument
+                  </th>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Ilość
+                  </th>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Śr. cena zakupu
+                  </th>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Bieżąca cena
+                  </th>
+                  <th style={{ borderBottom: "1px solid #444", padding: 6 }}>
+                    Wartość pozycji
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolio.positions.map((p) => (
+                  <tr key={p.instrument}>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "center",
+                      }}
+                    >
+                      {p.instrument}
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "right",
+                      }}
+                    >
+                      {p.quantity.toFixed(2)}
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "right",
+                      }}
+                    >
+                      {p.avg_open_price.toFixed(2)}
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "right",
+                      }}
+                    >
+                      {p.current_price.toFixed(2)}
+                    </td>
+                    <td
+                      style={{
+                        borderBottom: "1px solid #333",
+                        padding: 6,
+                        textAlign: "right",
+                      }}
+                    >
+                      {p.position_value.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div style={{ color: "#aaa", padding: 12 }}>
+            Brak danych portfela — dodaj pozycję lub kliknij „Odśwież portfel”.
+          </div>
+        )}
+      </section>
+    )}
+
+    {/* <div style={{ marginTop: "2rem" }}>
+      <AlertsPanel />
+    </div> */}
+  </div>
+);
 }
