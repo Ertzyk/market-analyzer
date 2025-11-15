@@ -1,47 +1,67 @@
+from datetime import date, datetime
+from typing import List, Dict, Optional
+
 import yfinance as yf
-from datetime import datetime
 
-def get_today_data(symbol="AAPL"):
-    # Pobieranie danych z dzisiaj
-    stock = yf.Ticker(symbol)
-    hist = stock.history(period="1d")
-    
-    if hist.empty:
-        print("Brak danych dla dzisiaj")
-        return
-    
-    # Ostatni wiersz czyli dane z dzisiaj
-    today = hist.iloc[-1]
-    
-    print("=" * 50)
-    print(f"DANE AKCJI: {symbol}")
-    print("=" * 50)
-    print(f"Data: {datetime.now().strftime('%Y-%m-%d')}")
-    print(f"Otwarcie: ${today['Open']:.2f}")
-    print(f"Zamknicie: ${today['Close']:.2f}")
-    print(f"Zmiana: ${today['Close'] - today['Open']:.2f}")
-    print(f"Min: ${today['Low']:.2f}")
-    print(f"Max: ${today['High']:.2f}")
-    print(f"Wolumen: {int(today['Volume']):,}")
-    print("=" * 50)
 
-if __name__ == "__main__":
-    get_today_data("AAPL")  # Wybieramy symbol spółki
+def get_history(
+    symbol: str,
+    period: str = "1y",
+    interval: str = "1d",
+    start: Optional[date] = None,
+    end: Optional[date] = None,
+) -> List[Dict]:
+    """
+    Wrapper na yfinance.Ticker.history:
+    - jeśli podane start/end -> używa zakresu dat,
+    - jeśli nie -> używa period (tak jak w starym prototypie).
+    Dzięki temu działa zarówno stare wywołanie get_history(symbol, "1y", "1d"),
+    jak i nowe: get_history(symbol, start=..., end=..., interval=...).
+    """
+    ticker = yf.Ticker(symbol)
 
-def get_history(symbol="AAPL", period="1y", interval="1d"):
-    stock = yf.Ticker(symbol)
-    hist = stock.history(period=period, interval=interval)
-    if hist.empty:
-        return []
-    hist = hist.reset_index()
-    out = []
-    for _, row in hist.iterrows():
-        out.append({
-            "date": row["Date"].strftime("%Y-%m-%d"),
-            "open": float(row["Open"]),
-            "high": float(row["High"]),
-            "low":  float(row["Low"]),
-            "close": float(row["Close"]),
-            "volume": int(row["Volume"]),
-        })
-    return out
+    # Jeśli podano zakres dat, użyj go
+    if start is not None or end is not None:
+        # yfinance akceptuje stringi YYYY-MM-DD, więc konwertujemy jeśli trzeba
+        if isinstance(start, (date, datetime)):
+            start_str = start.isoformat()
+        else:
+            start_str = start
+
+        if isinstance(end, (date, datetime)):
+            end_str = end.isoformat()
+        else:
+            end_str = end
+
+        df = ticker.history(start=start_str, end=end_str, interval=interval)
+    else:
+        # Wsteczne kompatybilne zachowanie – tylko period
+        df = ticker.history(period=period, interval=interval)
+
+    df = df.reset_index()
+
+    results: List[Dict] = []
+    for _, row in df.iterrows():
+        dt = row["Date"]
+        # pandas.Timestamp -> date
+        if hasattr(dt, "date"):
+            dt = dt.date()
+
+        def _to_float_or_none(v):
+            # NaN != NaN, więc tak łapiemy NaN bez importowania pandas
+            if v is None or v != v:
+                return None
+            return float(v)
+
+        results.append(
+            {
+                "date": dt,
+                "open": _to_float_or_none(row["Open"]),
+                "high": _to_float_or_none(row["High"]),
+                "low": _to_float_or_none(row["Low"]),
+                "close": float(row["Close"]),
+                "volume": _to_float_or_none(row["Volume"]),
+            }
+        )
+
+    return results

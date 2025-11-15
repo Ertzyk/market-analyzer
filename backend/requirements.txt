@@ -3,3 +3,4 @@ uvicorn
 yfinance
 pandas
 python-dotenv
+SQLAlchemy
