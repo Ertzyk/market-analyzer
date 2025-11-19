@@ -13,41 +13,41 @@ Built with:
 
 ---
 
-## 🚀 Features
+## Features
 
-### 📈 Market Data
+### Market Data
 - Live price lookup for any symbol.
 - Historical OHLC price retrieval.
 - Server-side caching with TTL to reduce API calls.
 
-### 💰 Portfolio Management
+### Portfolio Management
 - Add/update positions.
 - Automatic weighted average price calculation.
 - Multi-currency support.
 - Portfolio valuation with FX rates.
 
-### 🔔 Alerts
+### Alerts
 - Create price alerts with conditions (`>`, `<`).
 - Check alerts every 1 minute via APScheduler.
 - Triggered alerts are saved in logs.
 
-### 📊 Data Export
+### Data Export
 - Export historical prices to CSV through an API endpoint.
 
-### 📝 Logging System
+### Logging System
 - Tracks alerts, portfolio operations, requests, and system messages.
 - Filtering by type, date, symbol.
 - Reset logs endpoint.
 
-### 🎛 Personalization (UC5)
+### Personalization (UC5)
 - User-adjustable data layout, visible columns, etc.
 
-### 🗄 Database
+### Database
 - PostgreSQL for production.
 - SQLite test database for pytest.
 - Automatic schema creation via SQLAlchemy.
 
-### 🧪 Test Suite
+### Test Suite
 Covers:
 - Alerts
 - Cache behavior
