@@ -4,3 +4,11 @@ yfinance
 pandas
 python-dotenv
 SQLAlchemy
+psycopg2-binary
+pg8000
+redis
+pytest 
+pytest-asyncio 
+httpx 
+pytest-cov
+apscheduler

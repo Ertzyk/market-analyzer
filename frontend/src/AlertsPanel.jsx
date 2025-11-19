@@ -1,13 +1,12 @@
-// src/AlertsPanel.jsx
 import { useEffect, useState } from "react";
 
 const API_BASE_URL = "http://127.0.0.1:8000";
 
-const OPERATORS = [">", ">=", "<", "<="];
+const OPERATORS = [">", "<"]; // backend obsługuje tylko above/below
 
 export default function AlertsPanel() {
   const [alerts, setAlerts] = useState([]);
-  const [symbol, setSymbol] = useState("AAPL");
+  const [symbol, setSymbol] = useState("");
   const [operator, setOperator] = useState(">");
   const [targetPrice, setTargetPrice] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,6 +49,9 @@ export default function AlertsPanel() {
       return;
     }
 
+    // mapowanie operatorów -> backend
+    const condition = operator === ">" ? "above" : "below";
+
     try {
       setLoading(true);
       const res = await fetch(`${API_BASE_URL}/api/alerts`, {
@@ -57,8 +59,8 @@ export default function AlertsPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           symbol: symbol.trim().toUpperCase(),
-          operator,
-          target_price: price, // jeśli w backendzie nazwa jest inna, zmień klucz
+          condition,
+          threshold_price: price,
         }),
       });
 
@@ -107,12 +109,7 @@ export default function AlertsPanel() {
       if (!res.ok) throw new Error("Błąd sprawdzania alertów");
       const data = await res.json();
 
-      // obsłuż 2 możliwe formaty: [] albo {triggered: []}
-      const triggered = Array.isArray(data)
-        ? data
-        : Array.isArray(data.triggered)
-        ? data.triggered
-        : [];
+      const triggered = data.triggered || [];
 
       if (triggered.length === 0) {
         setMessage("Brak nowych wyzwolonych alertów.");
@@ -130,22 +127,23 @@ export default function AlertsPanel() {
   // ---- render ---------------------------------------------------------------
 
   return (
-    <div className="alerts-panel">
-      <h2>UC4 — Zarządzanie alertami cenowymi</h2>
+    <div className="alerts-panel" style={{ maxWidth: 800, margin: "0 auto" }}>
+      <h2>Alerty cenowe (UC4)</h2>
 
       <form className="alerts-form" onSubmit={handleAddAlert}>
-        <div className="row">
+        <div className="row" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
           <label>
-            Symbol
+            Symbol<br />
             <input
               type="text"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
+              placeholder="np. AAPL"
             />
           </label>
 
           <label>
-            Warunek
+            Warunek<br />
             <select
               value={operator}
               onChange={(e) => setOperator(e.target.value)}
@@ -159,7 +157,7 @@ export default function AlertsPanel() {
           </label>
 
           <label>
-            Cena docelowa
+            Cena docelowa<br />
             <input
               type="number"
               step="0.01"
@@ -168,28 +166,28 @@ export default function AlertsPanel() {
             />
           </label>
 
-          <button type="submit" disabled={loading}>
-            Dodaj alert
+          <button type="submit" disabled={loading} style={{ height: 38 }}>
+            {loading ? "Dodawanie..." : "Dodaj alert"}
           </button>
         </div>
       </form>
 
-      <div className="alerts-actions">
-        <button onClick={handleCheckAlerts} disabled={checking}>
-          {checking ? "Sprawdzanie..." : "Sprawdź alerty teraz"}
-        </button>
-      </div>
+      <button
+        onClick={handleCheckAlerts}
+        disabled={checking}
+        style={{ marginBottom: 16 }}
+      >
+        {checking ? "Sprawdzanie..." : "Sprawdź alerty teraz"}
+      </button>
 
-      {message && <p className="info-msg">{message}</p>}
-      {error && <p className="error-msg">{error}</p>}
+      {message && <p style={{ color: "lightgreen" }}>{message}</p>}
+      {error && <p style={{ color: "crimson" }}>{error}</p>}
 
       <h3>Aktywne alerty</h3>
-      {loading && alerts.length === 0 ? (
-        <p>Ładowanie…</p>
-      ) : alerts.length === 0 ? (
-        <p>Brak zapisanych alertów.</p>
+      {alerts.length === 0 ? (
+        <p>Brak alertów.</p>
       ) : (
-        <table className="alerts-table">
+        <table className="alerts-table" style={{ width: "100%", marginTop: 8 }}>
           <thead>
             <tr>
               <th>ID</th>
@@ -206,18 +204,16 @@ export default function AlertsPanel() {
                 <td>{a.id}</td>
                 <td>{a.symbol}</td>
                 <td>
-                  {a.operator} {a.target_price ?? a.threshold_price}
+                  {a.condition === "above" ? ">" : "<"} {a.threshold_price}
                 </td>
                 <td>{a.active ? "tak" : "nie"}</td>
                 <td>
                   {a.last_triggered_at
                     ? new Date(a.last_triggered_at).toLocaleString()
-                    : "–"}
+                    : "—"}
                 </td>
                 <td>
-                  <button onClick={() => handleDeleteAlert(a.id)}>
-                    Usuń
-                  </button>
+                  <button onClick={() => handleDeleteAlert(a.id)}>Usuń</button>
                 </td>
               </tr>
             ))}
@@ -228,11 +224,12 @@ export default function AlertsPanel() {
       {triggeredAlerts.length > 0 && (
         <>
           <h3>Ostatnio wyzwolone alerty</h3>
-          <ul className="triggered-list">
+          <ul>
             {triggeredAlerts.map((t, idx) => (
-              <li key={t.id ?? idx}>
-                {t.symbol} – {t.operator} {t.target_price ?? t.threshold_price}{" "}
-                (aktualna cena: {t.current_price ?? t.price ?? "?"})
+              <li key={idx}>
+                {t.symbol} —{" "}
+                {t.condition === "above" ? ">" : "<"} {t.threshold_price}{" "}
+                (cena: {t.current_price ?? "?"})
               </li>
             ))}
           </ul>

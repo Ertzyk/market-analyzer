@@ -12,6 +12,8 @@ import {
   Legend,
 } from "chart.js";
 import AlertsPanel from "./AlertsPanel.jsx";
+import ViewSettingsPanel from "./ViewSettingsPanel.jsx";
+import LogsPanel from "./LogsPanel";
 
 ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
@@ -41,28 +43,43 @@ const BACKEND_URL = "http://127.0.0.1:8000";
 export default function App() {
   const [view, setView] = useState("single"); // single | compare | portfolio
 
+  const defaultChartSettings = {
+  priceColor: "#4cc9f0",
+  priceWidth: 2,
+  showPoints: false,
+  tension: 0.1,
+  showSMA: true,
+  smaColor: "#f72585",
+  smaWidth: 2,
+};
+
+const [chartSettings, setChartSettings] = useState(() => {
+  const stored = localStorage.getItem("chartSettings");
+  return stored ? JSON.parse(stored) : defaultChartSettings;
+});
+
   // --- SINGLE INSTRUMENT (UC1–UC3) ---
-  const [symbol, setSymbol] = useState("AAPL");
-  const [startDate, setStartDate] = useState("2024-01-01");
-  const [endDate, setEndDate] = useState("2024-01-31");
+  const [symbol, setSymbol] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [points, setPoints] = useState([]);
   const [lastQuote, setLastQuote] = useState(null);
   const [singleLoading, setSingleLoading] = useState(false);
   const [singleErr, setSingleErr] = useState("");
 
   // --- COMPARE ---
-  const [cmpSymbols, setCmpSymbols] = useState("AAPL,MSFT,TSLA");
-  const [cmpStart, setCmpStart] = useState("2024-01-01");
-  const [cmpEnd, setCmpEnd] = useState("2024-03-31");
+  const [cmpSymbols, setCmpSymbols] = useState("");
+  const [cmpStart, setCmpStart] = useState("");
+  const [cmpEnd, setCmpEnd] = useState("");
   const [cmpData, setCmpData] = useState(null); // pełna odpowiedź z API
   const [cmpLoading, setCmpLoading] = useState(false);
   const [cmpErr, setCmpErr] = useState("");
 
   // --- PORTFOLIO ---
   const [portfolio, setPortfolio] = useState(null);
-  const [pfSymbol, setPfSymbol] = useState("AAPL");
-  const [pfQty, setPfQty] = useState("10");
-  const [pfPrice, setPfPrice] = useState("180");
+  const [pfSymbol, setPfSymbol] = useState("");
+  const [pfQty, setPfQty] = useState("");
+  const [pfPrice, setPfPrice] = useState("");
   const [pfLoading, setPfLoading] = useState(false);
   const [pfErr, setPfErr] = useState("");
 
@@ -83,7 +100,7 @@ export default function App() {
       setPoints(res.data.quotes || []);
     } catch (e) {
       console.error(e);
-      setSingleErr("Błąd pobierania historii (sprawdź backend / symbol / daty).");
+      setSingleErr("");
       setPoints([]);
     } finally {
       setSingleLoading(false);
@@ -136,25 +153,29 @@ export default function App() {
     .filter((p) => p.y != null);
 
   const singleChartData = {
-    datasets: [
-      {
-        label: `${symbol} — Close`,
-        data: closeSeries,
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.1,
-        borderColor: "#4cc9f0",
-      },
-      {
-        label: "SMA(20)",
-        data: smaSeries,
-        borderWidth: 2,
-        pointRadius: 0,
-        tension: 0.1,
-        borderColor: "#f72585",
-      },
-    ],
-  };
+  datasets: [
+    {
+      label: `${symbol} — Close`,
+      data: closeSeries,
+      borderWidth: chartSettings.priceWidth,
+      pointRadius: chartSettings.showPoints ? 2 : 0,
+      tension: chartSettings.tension,
+      borderColor: chartSettings.priceColor,
+    },
+    ...(chartSettings.showSMA
+      ? [
+          {
+            label: "SMA(20)",
+            data: smaSeries,
+            borderWidth: chartSettings.smaWidth,
+            pointRadius: 0,
+            tension: 0.1,
+            borderColor: chartSettings.smaColor,
+          },
+        ]
+      : []),
+  ],
+};
 
   const timeChartOptions = {
     responsive: true,
@@ -348,6 +369,46 @@ export default function App() {
       >
         Portfel (demo)
       </button>
+
+      <button
+  onClick={() => setView("alerts")}
+  style={{
+    padding: "8px 16px",
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    background: view === "alerts" ? "#1f2937" : "#111",
+    color: "white",
+  }}
+>
+  Alerty
+</button>
+<button
+  onClick={() => setView("settings")}
+  style={{
+    padding: "8px 16px",
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    background: view === "settings" ? "#1f2937" : "#111",
+    color: "white",
+  }}
+>
+  Konfiguruj widok
+</button>
+<button
+  onClick={() => setView("logs")}
+  style={{
+    padding: "8px 16px",
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    background: view === "logs" ? "#1f2937" : "#111",
+    color: "white",
+  }}
+>
+  Panel logów
+</button>
     </div>
 
     {view === "single" && (
@@ -918,9 +979,22 @@ export default function App() {
       </section>
     )}
 
-    {/* <div style={{ marginTop: "2rem" }}>
-      <AlertsPanel />
-    </div> */}
+    {view === "alerts" && (
+  <section>
+    <AlertsPanel />
+  </section>
+)}
+{view === "settings" && (
+  <section>
+    <ViewSettingsPanel onSave={(s) => setChartSettings(s)} />
+  </section>
+  
+)}
+{view === "logs" && (
+  <section>
+    <LogsPanel />
+  </section>
+)}
   </div>
 );
 }

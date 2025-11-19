@@ -112,3 +112,24 @@ class Alert(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     last_triggered_at = Column(DateTime, nullable=True)
+
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, DateTime, Text
+
+class LogEntry(Base):
+    __tablename__ = "logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    from zoneinfo import ZoneInfo
+
+    timestamp = Column(
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo("Europe/Warsaw")),
+        nullable=False,
+        index=True,
+    )
+    level = Column(String(20), default="INFO", nullable=False, index=True)
+    source = Column(String(50), nullable=True, index=True)  # np. "UC1", "UC4", "PORTFOLIO"
+    message = Column(Text, nullable=False)
+    user_email = Column(String(255), nullable=True)
+    details = Column(Text, nullable=True)

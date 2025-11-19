@@ -1,13 +1,16 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./market.db")
+# Połączenie z NOWYM kontenerem:
+#   docker run --name market-pg -e POSTGRES_PASSWORD=postgres -p 5433:5432 -d postgres
+#   user:     postgres
+#   password: postgres
+#   host:     localhost
+#   port:     5433 (na hoście)
+#   db:       postgres
+DATABASE_URL = "postgresql+pg8000://postgres:postgres@localhost:5433/postgres"
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
-)
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
